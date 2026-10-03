@@ -1,0 +1,17 @@
+{
+  "name": "SoulKeen — سال صفر",
+  "short_name": "SoulKeen",
+  "description": "بازی بقا و تکامل انسان در دنیای باز",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#04122e",
+  "theme_color": "#10161c",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
