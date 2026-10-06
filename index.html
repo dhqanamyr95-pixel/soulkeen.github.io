@@ -142,13 +142,15 @@ h1{font-size:13vmin;margin:0 0 4px;letter-spacing:.02em}
 .rotIcon{font-size:64px;animation:rotp 2s infinite}
 @keyframes rotp{0%,30%{transform:rotate(0)}70%,100%{transform:rotate(-90deg)}}
 @media (orientation:portrait) and (max-width:900px){#rotateMsg{display:flex}}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:9;display:none;background:radial-gradient(ellipse at 50% 45%,transparent 58%,rgba(0,0,0,.3) 100%)}
+body.playing #vig{display:block}
 .roomCode{font-size:34px;letter-spacing:.3em;text-align:center;margin:10px 0;color:#9ad27a;font-weight:bold;min-height:44px}
 .netBox{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.9;margin-bottom:12px;min-height:46px}
 </style>
 </head>
 <body>
-<canvas id="gl"></canvas>
-<div id="rotateMsg"><div class="rotIcon">📱</div><div>گوشی را افقی بگیر</div><div style="font-size:14px;opacity:.7">اگر چرخش خودکار گوشی خاموش است، روشنش کن</div></div>
+<canvas id="gl"></canvas><div id="vig"></div>
+<div id="rotateMsg"><div class="rotIcon">📱</div><div>گوشی را بخوابان (افقی)</div><div style="font-size:14px;opacity:.7">بعد از لمس صفحه‌ی اول، بازی خودش افقی می‌شود. اگر نشد، یک بار گوشی را بچرخان</div></div>
 <div id="sbtns"><button id="sUp">▲</button><button id="sDn">▼</button></div>
 <button id="skip">رد کردن</button>
 
@@ -156,10 +158,10 @@ h1{font-size:13vmin;margin:0 0 4px;letter-spacing:.02em}
 <div id="introScr" class="scr"><video id="introVid" playsinline preload="auto"></video><div id="introBar"></div><button id="introCont">ادامه ▶</button></div>
 
 <div id="menu" class="scr menuBg">
-  <h1>سال صفر</h1><div class="sub">روز اول انسان روی زمین</div>
-  <button class="mbtn main" id="mSingle">تک‌نفره (با ۳ ربات حرفه‌ای)</button>
+  <h1>سال صفر</h1><div id="whoami" class="sub" style="margin-bottom:6px"></div><div class="sub">روز اول انسان روی زمین</div>
+  <div class="sgrp" style="margin:2px 0 4px">آفلاین (بدون اینترنت)</div><button class="mbtn main" id="mSingle">تک‌نفره (با ۳ ربات حرفه‌ای)</button>
   <button class="mbtn" id="mContinue">ادامه‌ی بازی ذخیره‌شده</button>
-  <button class="mbtn" id="mOnline">آنلاین</button>
+  <div class="sgrp" style="margin:10px 0 4px">آنلاین</div><button class="mbtn" id="mOnline">آنلاین</button>
   <button class="mbtn" id="mSettings">تنظیمات</button>
 </div>
 <div id="settings" class="scr menuBg">
@@ -174,6 +176,7 @@ h1{font-size:13vmin;margin:0 0 4px;letter-spacing:.02em}
   <div class="panel"><div class="phead"><button class="backBtn" id="onBack2">→ بازگشت</button><h2>آنلاین (تا ۴ نفر)</h2></div>
     <div class="netBox" id="netStatus">برای شروع «ساخت روم» را بزن، یا کد روم دوستت را بنویس و «ورود به روم» را بزن.</div>
     <div class="note">بدون سرور اختصاصی: گوشی‌ها مستقیم به هم وصل می‌شوند و فقط شناسایی اولیه با سرور رایگان PeerJS انجام می‌شود. یک نفر روم می‌سازد و کدش را به بقیه می‌دهد.</div>
+    <div class="sgrp">روم‌های باز</div><div class="netBox" id="roomList"></div><button class="mbtn" id="roomRefresh" style="width:100%">بروزرسانی لیست</button>
     <button class="mbtn main" id="roomMake" style="width:100%">ساخت روم (میزبان)</button>
     <div class="roomCode" id="roomCodeBox"></div>
     <input type="text" id="roomIn" maxlength="8" placeholder="کد روم دوستت را اینجا بنویس">
@@ -183,6 +186,13 @@ h1{font-size:13vmin;margin:0 0 4px;letter-spacing:.02em}
     <button class="mbtn" id="onBack" style="width:100%">بازگشت</button></div>
 </div>
 
+<div id="login" class="scr menuBg">
+  <div class="panel"><div class="phead"><button class="backBtn" id="lgBack">→ بازگشت</button><h2>پروفایل بازیکن</h2></div>
+    <div class="note">بازی آنلاین فقط برای بازیکن‌هایی است که پروفایل دارند؛ مهمان نمی‌تواند وارد روم شود. یک نام برای خودت انتخاب کن. بازی تک‌نفره بدون پروفایل هم باز است.</div>
+    <input type="text" id="lgName" maxlength="14" placeholder="نام بازیکن (۳ تا ۱۴ حرف)">
+    <div class="note" id="lgErr" style="color:#ff9a8a;min-height:22px"></div>
+    <button class="mbtn main" id="lgOk" style="width:100%">ساخت پروفایل و ورود به آنلاین</button></div>
+</div>
 <div id="pause" class="scr">
   <div class="panel"><h2>منو</h2>
     <button class="mbtn main" id="pBack" style="width:100%">بازگشت به بازی</button>
@@ -228,6 +238,7 @@ h1{font-size:13vmin;margin:0 0 4px;letter-spacing:.02em}
 /* ============ تنظیمات قابل تغییر ============ */
 // لینک‌ها را بعد از آپلود روی هاست اینجا بگذار. مثال: brandVideo:"intro.mp4"
 const CFG={
+  roomsDB:"",          // آدرس Firebase Realtime Database برای لیست روم‌ها (خالی = غیرفعال)
   introVideo:"",       // اگر بخواهی ویدیوی دیگری بگذاری: لینک mp4 (مثلاً "intro.mp4")
   brandName:"نام برند شما",
   brandVideo:"",       // ویدیوی ۵ ثانیه‌ای برند (mp4)
@@ -246,7 +257,9 @@ function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a
 function hsh(i,j,s){let h=Math.imul(i,374761393)^Math.imul(j,668265263)^Math.imul(s+1,1274126177);h=Math.imul(h^(h>>>13),1103515245);h^=h>>>16;return(h>>>0)/4294967296;}
 let rnd=mulberry(20260930);
 // ذخیره فقط در حافظه‌ی همین صفحه. موقع انتشار روی هاست این دو تابع را به ذخیره‌ی دائمی وصل می‌کنیم.
-const Store={data:null,save(s){this.data=s;},load(){return this.data;}};
+const Store={data:null,key:'soulkeen_save_v1',
+  save(s){this.data=s;try{localStorage.setItem(this.key,s);}catch(e){}},
+  load(){if(this.data)return this.data;try{this.data=localStorage.getItem(this.key);}catch(e){}return this.data;}};
 const SDEFS=[
  {k:'quality',l:'کیفیت گرافیک',t:'sel',o:['کم','متوسط','بالا'],d:1,g:'گرافیک'},
  {k:'cinematic',l:'فیلتر سینمایی',t:'tog',d:1,g:'گرافیک'},
@@ -257,9 +270,10 @@ const SDEFS=[
  {k:'viewDist',l:'فاصله‌ی دید',t:'rng',min:60,max:200,s:10,d:105,g:'گرافیک'},
  {k:'resScale',l:'وضوح تصویر',t:'rng',min:.5,max:1.5,s:.05,d:1,g:'گرافیک'},
  {k:'autoPerf',l:'کم‌کردن خودکار کیفیت هنگام لَگ',t:'tog',d:1,g:'گرافیک'},
- {k:'fpsCap',l:'سقف فریم',t:'sel',o:['نامحدود','۶۰','۳۰'],d:0,g:'گرافیک'},
+ {k:'fpsCap',l:'سقف فریم',t:'sel',o:['نامحدود','۶۰','۳۰'],d:1,g:'گرافیک'},
  {k:'weatherFx',l:'باران و برف',t:'tog',d:1,g:'گرافیک'},
  {k:'insects',l:'پروانه و کرم شب‌تاب',t:'tog',d:1,g:'گرافیک'},
+ {k:'freeRot',l:'چرخش دوربین با کشیدن انگشت',t:'tog',d:1,g:'دوربین'},
  {k:'rotSens',l:'حساسیت چرخش دوربین',t:'rng',min:.3,max:2,s:.1,d:1,g:'دوربین'},
  {k:'zoomSpeed',l:'سرعت زوم',t:'rng',min:.3,max:2,s:.1,d:1,g:'دوربین'},
  {k:'zoomMin',l:'نزدیک‌ترین زوم',t:'rng',min:8,max:30,s:1,d:12,g:'دوربین'},
@@ -279,9 +293,17 @@ const SDEFS=[
  {k:'showFps',l:'نمایش FPS',t:'tog',d:0,g:'نمایش'}
 ];
 const SET={};SDEFS.forEach(d=>{SET[d.k]=d.d;});
+const LS={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+try{const sv=JSON.parse(LS.get('soulkeen_cfg_v1')||'null');if(sv)SDEFS.forEach(d=>{if(typeof sv[d.k]==='number')SET[d.k]=sv[d.k];});}catch(e){}
+function saveCfg(){LS.set('soulkeen_cfg_v1',JSON.stringify(SET));}
 const settings={name:"بازیکن",get quality(){return SET.quality;},set quality(v){SET.quality=v;}};
 const net={on:false,host:false,peer:null,conns:[],slot:0,map:{},names:{},hostConn:null,applying:false,t:0,tt:0,code:""};
 let siteSeq=0;
+let profile=null;
+try{profile=JSON.parse(LS.get('soulkeen_profile_v1')||'null');}catch(e){profile=null;}
+const BAD_NAMES=['مهمان','بازیکن','کاربر','guest','player','user'];
+function nameOK(n){n=(n||'').trim();return n.length>=3&&n.length<=14&&!BAD_NAMES.includes(n.toLowerCase())&&!/^[0-9۰-۹]+$/.test(n);}
+if(profile&&nameOK(profile.name))settings.name=profile.name;else profile=null;
 
 const SCROLLABLE={settings:'#settings .panel',craft:'#craft .panel',menu:'#menu',pause:'#pause .panel',online:'#online .panel'};let scrollTarget=null;
 function show(id){document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));if(id)$(id).classList.add('on');const sb=$('sbtns');if(sb)sb.style.display=SCROLLABLE[id]?'flex':'none';scrollTarget=SCROLLABLE[id]||null;}
@@ -317,7 +339,7 @@ function tryLandscape(){try{const el=document.documentElement,p=el.requestFullsc
 $('tapScr').onclick=()=>{tryLandscape();if(CFG.introVideo)playIntro();else goMenu();};
 $('skip').onclick=goMenu;
 $('introCont').onclick=goMenu;
-function openMenu(){show('menu');$('mContinue').style.display=Store.load()?'block':'none';}
+function openMenu(){show('menu');updWho();$('mContinue').style.display=Store.load()?'block':'none';}
 
 /* ============ بافت‌های ساخته‌شده با کد ============ */
 function tex(w,h,fn,rx,ry){
@@ -438,24 +460,28 @@ const clouds=[];
 let scDirty=true;
 
 /* ---- مدیریت کارایی: کم‌کردن خودکار کیفیت هنگام لَگ ---- */
+let camZf=1;
 const perf={pr:1,max:1.25,min:.6,rs:1,dens:1,acc:0,frames:0,lock:0};
-function resSet(){renderer.setPixelRatio(perf.pr);renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}
+function resSet(){renderer.setPixelRatio(perf.pr);renderer.setSize(innerWidth,innerHeight,false);const as=innerWidth/innerHeight;camera.aspect=as;camera.fov=as<1?60:50;camZf=as<1?1+(1-as)*.9:1;camera.updateProjectionMatrix();}
 function applyTone(){
   renderer.toneMapping=SET.cinematic?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;renderer.toneMappingExposure=SET.exposure;
   scene.traverse(o=>{if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.needsUpdate=true;});}});
 }
 function applyQuality(){
-  const q=SET.quality;perf.max=Math.max(.5,Math.min(devicePixelRatio,[.9,1.25,2][q])*SET.resScale);perf.pr=perf.max;perf.rs=1;perf.dens=1;perf.lock=0;
+  const q=SET.quality;perf.max=Math.max(.5,Math.min(devicePixelRatio,[.9,1.25,1.75][q])*SET.resScale);perf.pr=perf.max;perf.rs=1;perf.dens=1;perf.lock=0;
   const sm=q===2?2048:1024;if(sun.shadow.mapSize.x!==sm){sun.shadow.mapSize.set(sm,sm);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}}
   const sc=sun.shadow.camera,d=SET.shadowDist;sc.left=-d;sc.right=d;sc.top=d;sc.bottom=-d;if(sc.updateProjectionMatrix)sc.updateProjectionMatrix();
+  renderer.shadowMap.type=q===2?THREE.PCFSoftShadowMap:THREE.PCFShadowMap;
+  {const bm=q===2;terrain.material.bumpMap=bm?T_GROUND:null;rockMat.bumpMap=bm?T_ROCK:null;TV.forEach(V=>{V.trunk.material.bumpMap=bm?T_BARK:null;});
+   [terrain.material,rockMat].concat(TV.map(V=>V.trunk.material)).forEach(m=>{m.needsUpdate=true;});}
   sun.castShadow=q>0&&!!SET.shadows;renderer.toneMappingExposure=SET.exposure;
   clouds.forEach(c=>{c.castShadow=q===2;c.visible=q===2;});scDirty=true;poolsDirty();resSet();
 }
 function autoPerf(rdt){
   if(!SET.autoPerf)return;
-  perf.acc+=rdt;perf.frames++;if(perf.lock>0)perf.lock-=rdt;if(perf.acc<1.2)return;
+  perf.acc+=rdt;perf.frames++;if(perf.lock>0)perf.lock-=rdt;if(perf.acc<.9)return;
   const ms=perf.acc/perf.frames*1000;perf.acc=0;perf.frames=0;
-  if(ms>27){
+  if(ms>25){
     perf.lock=8;
     if(perf.pr>perf.min+.01){perf.pr=Math.max(perf.min,perf.pr-.15);resSet();}
     else if(perf.dens>.35){perf.dens-=.2;scDirty=true;}
@@ -466,7 +492,7 @@ function autoPerf(rdt){
     else if(perf.pr<perf.max-.01){perf.pr=Math.min(perf.max,perf.pr+.05);resSet();}
   }
 }
-addEventListener('resize',resSet);
+addEventListener('resize',()=>{resSet();layoutHud();});
 
 /* زمین */
 const N=128,tg=new THREE.PlaneGeometry(W,W,N,N);tg.rotateX(-Math.PI/2);
@@ -502,13 +528,13 @@ function inst(m,shadow){m.frustumCulled=false;m.castShadow=!!shadow;scene.add(m)
 function dyn(m,withColor){if(withColor)m.setColorAt(0,new THREE.Color(1,1,1));m.count=0;if(m.instanceMatrix.setUsage)m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);return m;}
 
 /* ---- Pool: فقط اشیای نزدیک به دوربین رسم می‌شوند (کلید حذف لَگ) ---- */
-const pools=[];let plx=1e9,plz=1e9;
+const pools=[];let plx=1e9,plz=1e9,viewR=105,pvr=0;
 class Pool{
   constructor(mesh,max,R,color){this.mesh=mesh;this.max=max;this.R=R;this.n=0;this.m=new Float32Array(max*16);this.p=new Float32Array(max*2);this.c=color?new Float32Array(max*3):null;this.dirty=true;dyn(mesh,color);pools.push(this);}
   put(i,x,z){tmp.matrix.toArray(this.m,i*16);this.p[i*2]=x;this.p[i*2+1]=z;this.dirty=true;if(i>=this.n)this.n=i+1;}
   col(i,r,g,b){this.c[i*3]=r;this.c[i*3+1]=g;this.c[i*3+2]=b;this.dirty=true;}
   refresh(fx,fz){
-    const R=this.R*perf.rs*SET.viewDist/105,R2=R*R,ma=this.mesh.instanceMatrix.array,ca=this.c?this.mesh.instanceColor.array:null;let k=0;
+    const R=Math.min(this.R*perf.rs*SET.viewDist/105,viewR),R2=R*R,ma=this.mesh.instanceMatrix.array,ca=this.c?this.mesh.instanceColor.array:null;let k=0;
     for(let i=0;i<this.n;i++){
       const dx=this.p[i*2]-fx,dz=this.p[i*2+1]-fz;if(dx*dx+dz*dz>R2)continue;
       const s=i*16,d=k*16;for(let q=0;q<16;q++)ma[d+q]=this.m[s+q];
@@ -519,7 +545,8 @@ class Pool{
   }
 }
 function poolsDirty(){pools.forEach(p=>p.dirty=true);}
-function refreshPools(){const moved=Math.hypot(cf.x-plx,cf.z-plz)>4;pools.forEach(p=>{if(moved||p.dirty)p.refresh(cf.x,cf.z);});if(moved){plx=cf.x;plz=cf.z;}}
+function calcViewR(){const f=camera.fov*Math.PI/360,top=G.pitch-f,h=Math.sin(G.pitch)*G.dist;const far=top>.2?h/Math.tan(top):1e4;return Math.max(48,far*1.45+16);}
+function refreshPools(){const vr=calcViewR(),moved=Math.hypot(cf.x-plx,cf.z-plz)>4||Math.abs(vr-pvr)>6;if(moved){viewR=vr;pvr=vr;}pools.forEach(p=>{if(moved||p.dirty)p.refresh(cf.x,cf.z);});if(moved){plx=cf.x;plz=cf.z;}}
 
 /* درخت‌ها: بلوط، اقاقیا (آفریقایی)، کاج */
 const MAXV=300,TV=[];
@@ -579,13 +606,13 @@ buildStatic();
 
 /* ---- علف، گل و سنگ‌ریزه: اطراف بازیکن با تراکم بالا ساخته می‌شوند ---- */
 const SC={r:1,g:1,b:1,sy:1};
-function scatter(mesh,max,cell,R,seed,fx,fz,f){
+function scatter(mesh,max,cell,R,seed,fx,fz,f,amax){
   const ma=mesh.instanceMatrix.array,ca=mesh.instanceColor?mesh.instanceColor.array:null,R2=R*R;
   const i0=Math.floor((fx-R)/cell),i1=Math.floor((fx+R)/cell),j0=Math.floor((fz-R)/cell),j1=Math.floor((fz+R)/cell);let k=0;
   for(let i=i0;i<=i1&&k<max;i++)for(let j=j0;j<=j1&&k<max;j++){
     const x=(i+hsh(i,j,seed+1))*cell,z=(j+hsh(i,j,seed+2))*cell,dx=x-fx,dz=z-fz,d2=dx*dx+dz*dz;if(d2>R2)continue;
     if(Math.abs(x)>HALF-3||Math.abs(z)>HALF-3)continue;
-    const a=hsh(i,j,seed),y=hgt(x,z);SC.r=SC.g=SC.b=1;SC.sy=1;
+    const a=hsh(i,j,seed);if(amax!==undefined&&a>amax)continue;const y=hgt(x,z);SC.r=SC.g=SC.b=1;SC.sy=1;
     const s=f(a,x,y,z,i,j,Math.sqrt(d2)/R);if(s<=0)continue;
     const t=hsh(i,j,seed+3)*6.2832,c=Math.cos(t)*s,sn=Math.sin(t)*s,o=k*16;
     ma[o]=c;ma[o+1]=0;ma[o+2]=-sn;ma[o+3]=0;ma[o+4]=0;ma[o+5]=s*SC.sy;ma[o+6]=0;ma[o+7]=0;ma[o+8]=sn;ma[o+9]=0;ma[o+10]=c;ma[o+11]=0;ma[o+12]=x;ma[o+13]=y;ma[o+14]=z;ma[o+15]=1;
@@ -631,11 +658,11 @@ function pebbleFn(a,x,y,z,i,j,df){
 }
 let slx=1e9,slz=1e9;
 function refreshScatter(){
-  if(!scDirty&&Math.hypot(cf.x-slx,cf.z-slz)<2.5)return;
+  if(!scDirty&&Math.hypot(cf.x-slx,cf.z-slz)<4)return;
   slx=cf.x;slz=cf.z;scDirty=false;const q=settings.quality;
-  if(grassM){if(q>0)scatter(grassM,Math.floor(GRASS_MAX*(q===2?1:.68)),.6,34,11,cf.x,cf.z,grassFn);else grassM.count=0;}
-  if(flowerM){if(q>0)scatter(flowerM,1300,.9,34,23,cf.x,cf.z,flowerFn);else flowerM.count=0;}
-  if(pebbleM){if(q>0)scatter(pebbleM,700,1.1,38,31,cf.x,cf.z,pebbleFn);else pebbleM.count=0;}
+  if(grassM){if(q>0)scatter(grassM,Math.floor(GRASS_MAX*(q===2?1:.68)),.6,34,11,cf.x,cf.z,grassFn,.92*perf.dens*SET.grass);else grassM.count=0;}
+  if(flowerM){if(q>0)scatter(flowerM,1300,.9,34,23,cf.x,cf.z,flowerFn,.55*perf.dens*SET.grass);else flowerM.count=0;}
+  if(pebbleM){if(q>0)scatter(pebbleM,700,1.1,38,31,cf.x,cf.z,pebbleFn,.3*perf.dens);else pebbleM.count=0;}
 }
 
 /* ابرها (فقط سایه‌ی متحرکشان روی زمین دیده می‌شود) */
@@ -1134,6 +1161,7 @@ const WC={dim:1,near:90,far:230,rain:0,gray:0};
 function season(){return Math.floor(((G.days%60)/5)/3);}
 function pickWeather(){const r=rnd();G.weather=r<.45?'clear':r<.65?'cloudy':r<.85?'rain':r<.95?'fog':'storm';}
 function onNewDay(){
+  if(!net.on&&G.running&&!G.over){try{Store.save(snapshot());}catch(e){}}
   const tt=gt();
   bushes.forEach((b,i)=>{if(b.valid&&!b.berries&&b.regrow&&G.days>=b.regrow){b.berries=true;setBerries(i);}});
   trees.forEach((tr,i)=>{if(!tr.valid)return;if(!tr.alive&&tr.regrow&&tt>=tr.regrow){tr.alive=true;tr.hp=4;tr.stock=4;tr.regrow=0;setTree(i);}else if(tr.alive)tr.stock=Math.min(4,tr.stock+2);});
@@ -1148,7 +1176,7 @@ function updateSky(dt){
   const a=(G.tod-.25)*Math.PI*2,elev=Math.sin(a),d=clamp((elev+.15)/.45,0,1);
   tc.copy(SKYN).lerp(SKYD,d);const dusk=Math.max(0,1-Math.abs(elev)/.25)*.6;tc.lerp(SKYU,dusk);
   const gr=SKYG.clone().multiplyScalar(.2+.8*d);tc.lerp(gr,WC.gray);
-  scene.background.copy(tc);scene.fog.color.copy(tc);scene.fog.near=WC.near;scene.fog.far=WC.far;
+  scene.background.copy(tc);scene.fog.color.copy(tc);scene.fog.near=WC.near*Math.max(1,camZf);scene.fog.far=WC.far*Math.max(1,camZf);
   sun.intensity=Math.max(0,elev)*1.25*WC.dim+.1;sun.color.setHSL(.11,.6+dusk*.3,.85-dusk*.15);
   hemi.intensity=.16+.5*d*(.5+.5*WC.dim);
   sun.position.set(cf.x+Math.cos(a)*50,Math.max(8,Math.sin(a)*70+12),cf.z+30);sun.target.position.set(cf.x,cf.y,cf.z);
@@ -1194,11 +1222,11 @@ const joy={x:0,y:0},keys={w:0,a:0,s:0,d:0};let actHeld=false;
 (function(){const ptr=new Map();let pd=0;
   canvas.addEventListener('pointerdown',e=>{ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptr.size===2){const [a,b]=[...ptr.values()];pd=Math.hypot(a.x-b.x,a.y-b.y);}});
   canvas.addEventListener('pointermove',e=>{const p=ptr.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x;p.x=e.clientX;p.y=e.clientY;
-    if(ptr.size===1){if(G.running)G.yaw-=dx*.007*SET.rotSens;}
+    if(ptr.size===1){if(G.running&&SET.freeRot)G.yaw-=dx*.007*SET.rotSens;}
     else if(ptr.size===2){const [a,b]=[...ptr.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);G.zoomT=clamp(G.zoomT-(d-pd)*.06*SET.zoomSpeed,SET.zoomMin,SET.zoomMax);pd=d;}});
   const end=e=>ptr.delete(e.pointerId);canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);
   canvas.addEventListener('wheel',e=>{G.zoomT=clamp(G.zoomT+e.deltaY*.02*SET.zoomSpeed,SET.zoomMin,SET.zoomMax);},{passive:true});})();
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k in keys)keys[k]=1;if(k==='q')G.yaw+=.15;if(k==='e')G.yaw-=.15;if(k===' ')actHeld=true;});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k in keys)keys[k]=1;if(SET.freeRot){if(k==='q')G.yaw+=.15;if(k==='e')G.yaw-=.15;}if(k===' ')actHeld=true;});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k in keys)keys[k]=0;if(k===' ')actHeld=false;});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 const bAct=$('bAct');bAct.addEventListener('pointerdown',e=>{actHeld=true;e.preventDefault();});['pointerup','pointerleave','pointercancel'].forEach(ev=>bAct.addEventListener(ev,()=>actHeld=false));
@@ -1213,18 +1241,22 @@ $('plNo').onclick=endPlace;
 
 /* ============ تنظیمات (۳۰ گزینه) ============ */
 let settingsFrom='menu';
+function layoutHud(){const por=innerHeight>innerWidth,ms=por?Math.min(SET.miniSize,100):SET.miniSize,m=$('mini');
+  m.style.width=m.style.height=ms+'px';m.style.display=SET.showMini?'block':'none';
+  $('miniHint').style.display=SET.showMini?'block':'none';$('miniHint').style.top=(ms+12)+'px';
+  const db=$('datebox');db.style.left=(SET.showMini?ms+20:10)+'px';db.style.right=por?'66px':'';db.style.minWidth=por?'0':'';db.style.maxWidth=por?'none':'';}
 function applySettings(){
   applyQuality();applyTone();
   const hud=$('hud'),joyEl=$('joy');
   hud.classList.toggle('swap',SET.joySide===1);
   joyEl.style.width=joyEl.style.height=SET.joySize+'px';joyEl.style.opacity=SET.joyOpacity;
   const ac=$('acts');ac.style.transform='scale('+SET.btnSize+')';ac.style.transformOrigin=SET.joySide===1?'left bottom':'right bottom';
-  const m=$('mini'),ms=SET.miniSize;m.style.width=m.style.height=ms+'px';m.style.display=SET.showMini?'block':'none';
-  $('miniHint').style.display=SET.showMini?'block':'none';$('miniHint').style.top=(ms+12)+'px';
-  $('datebox').style.left=(SET.showMini?ms+20:10)+'px';
+  layoutHud();
+  
+  
   $('labels').style.display=SET.showNames?'block':'none';
   marker.visible=!!SET.showMarker;
-  $('fps').style.display=SET.showFps?'block':'none';
+  $('fps').style.display=SET.showFps?'block':'none';$('bCam').style.display=SET.freeRot?'':'none';if(!SET.freeRot){G.smart=false;$('bCam').classList.remove('on');}
   G.zoomT=clamp(G.zoomT,SET.zoomMin,SET.zoomMax);
   scDirty=true;poolsDirty();
 }
@@ -1244,7 +1276,7 @@ function buildSettingsUI(){
   });
 }
 function openSettings(from){settingsFrom=from;$('nameIn').value=settings.name;buildSettingsUI();show('settings');}
-$('setBack').onclick=()=>{const n=$('nameIn').value.trim();if(n){settings.name=n;P.name=n;P.lab.textContent=n;}applySettings();if(settingsFrom==='pause')show('pause');else openMenu();};
+$('setBack').onclick=()=>{const n=$('nameIn').value.trim();if(n&&(!profile||nameOK(n))){settings.name=n;P.name=n;P.lab.textContent=n;if(profile){profile.name=n;LS.set('soulkeen_profile_v1',JSON.stringify(profile));}}saveCfg();applySettings();if(settingsFrom==='pause')show('pause');else openMenu();};
 document.querySelectorAll('#settings input[type=file]').forEach(inp=>inp.onchange=()=>{const f=inp.files[0];if(!f)return;CFG[inp.dataset.k]=URL.createObjectURL(f);const sp=inp.parentNode.querySelector('span');if(sp&&sp.textContent.indexOf('✓')<0)sp.textContent+=' ✓';});
 
 /* ============ منوها ============ */
@@ -1253,15 +1285,38 @@ $('pBack').onclick=()=>{G.paused=false;show(null);};
 $('pSave').onclick=()=>{if(net.on){toast('ذخیره در حالت آنلاین نیست');return;}Store.save(snapshot());toast('💾 ذخیره شد');G.paused=false;show(null);};
 $('pSettings').onclick=()=>openSettings('pause');
 $('pRestart').onclick=()=>{if(net.on){toast('شروع دوباره در حالت آنلاین نیست');return;}startGame(null);};
-$('pExit').onclick=()=>{netLeave();G.running=false;G.paused=false;endPlace();$('hud').classList.remove('on');openMenu();};
+$('pExit').onclick=()=>{document.body.classList.remove('playing');netLeave();G.running=false;G.paused=false;endPlace();$('hud').classList.remove('on');openMenu();};
 $('overBtn').onclick=()=>startGame(null);
 $('mSingle').onclick=()=>startGame(null);
 $('mContinue').onclick=()=>startGame(Store.load());
 $('mSettings').onclick=()=>openSettings('menu');
-$('mOnline').onclick=()=>show('online');
+$('mOnline').onclick=openOnline;
 $('onBack').onclick=openMenu;
-$('roomMake').onclick=netHost;
-$('roomJoin').onclick=()=>netJoin($('roomIn').value);$('roomStart').onclick=netStartHost;
+$('roomMake').onclick=()=>{if(!profile){openOnline();return;}netHost();};
+$('roomJoin').onclick=()=>{if(!profile){openOnline();return;}netJoin($('roomIn').value);};
+function updWho(){const e=$('whoami');if(e)e.textContent=profile?('👤 '+profile.name):'👤 مهمان (بازی آنلاین قفل است)';}
+function openOnline(){if(!profile){$('lgErr').textContent='';$('lgName').value='';show('login');return;}show('online');roomsLoad();}
+function mkProfile(){const n=$('lgName').value.trim();if(!nameOK(n)){$('lgErr').textContent='نام باید ۳ تا ۱۴ حرف باشد، فقط عدد نباشد و «مهمان» یا «بازیکن» نباشد.';return;}
+  profile={name:n,id:Math.random().toString(36).slice(2,8)};LS.set('soulkeen_profile_v1',JSON.stringify(profile));settings.name=n;P.name=n;P.lab.textContent=n;updWho();show('online');roomsLoad();}
+$('lgOk').onclick=mkProfile;$('lgBack').onclick=openMenu;
+function roomsURL(p){return CFG.roomsDB.replace(/[/]$/,'')+'/rooms'+(p?'/'+p:'')+'.json';}
+async function roomsLoad(){const box=$('roomList');if(!box)return;
+  if(!CFG.roomsDB){box.textContent='لیست روم‌ها هنوز فعال نشده است. با کد روم دوستت وارد شو.';return;}
+  box.textContent='در حال گرفتن لیست...';
+  try{const r=await fetch(roomsURL()),d=(await r.json())||{},now=Date.now();
+    const arr=Object.entries(d).filter(([k,v])=>v&&now-v.ts<45000&&v.n<4);box.innerHTML='';
+    if(!arr.length){box.textContent='فعلاً روم بازی نیست.';return;}
+    arr.forEach(([code,v])=>{const row=document.createElement('div');row.className='srow';const sp=document.createElement('span');sp.textContent=v.host+' ('+v.n+'/4)';
+      const b=document.createElement('button');b.className='backBtn';b.textContent='ورود';b.onclick=()=>{$('roomIn').value=code;if(!profile){openOnline();return;}netJoin(code);};
+      row.appendChild(sp);row.appendChild(b);box.appendChild(row);});
+  }catch(e){box.textContent='گرفتن لیست ممکن نشد.';}}
+let listedCode=null;
+async function roomsPush(){if(!CFG.roomsDB)return;
+  const want=net.host&&net.code&&!net.on&&net.conns.length<3;
+  try{if(listedCode&&(!want||listedCode!==net.code)){await fetch(roomsURL(listedCode),{method:'DELETE'});listedCode=null;}
+    if(want){await fetch(roomsURL(net.code),{method:'PUT',body:JSON.stringify({host:settings.name,n:1+net.conns.length,ts:Date.now()})});listedCode=net.code;}}catch(e){}}
+setInterval(roomsPush,8000);
+$('roomRefresh').onclick=roomsLoad;$('roomStart').onclick=netStartHost;
 
 /* ============ پنل ساخت (۵۰۰ تجهیز) ============ */
 let craftCat='اولیه';
@@ -1308,10 +1363,16 @@ const MAPN=320,baseBig=document.createElement('canvas');baseBig.width=baseBig.he
     const sh=.92+h*.02;img.data[o]=r*sh;img.data[o+1]=g*sh;img.data[o+2]=b*sh;img.data[o+3]=255;}
   c.putImageData(img,0,0);})();
 const hexc=n=>'#'+n.toString(16).padStart(6,'0');
+const treeLayer={};
+function treesLayer(size,big){let L=treeLayer[size];const now=performance.now();
+  if(!L||now-L.t>3000){if(!L){const c=document.createElement('canvas');c.width=c.height=size;L=treeLayer[size]={c,t:0};}
+    const x=L.c.getContext('2d'),k=size/W,q=big?3:1.6;x.clearRect(0,0,size,size);x.fillStyle='rgba(15,70,25,.85)';
+    trees.forEach(t=>{if(t.alive)x.fillRect((t.x+HALF)*k-q/2,(t.z+HALF)*k-q/2,q,q);});L.t=now;}
+  return L.c;}
 function drawMapTo(ctx,size,big){
   const k=size/W,tx=x=>(x+HALF)*k,tz=z=>(z+HALF)*k;
   ctx.imageSmoothingEnabled=true;ctx.drawImage(baseBig,0,0,size,size);
-  ctx.fillStyle='rgba(15,70,25,.85)';trees.forEach(t=>{if(t.alive){const s=big?3:1.6;ctx.fillRect(tx(t.x)-s/2,tz(t.z)-s/2,s,s);}});
+  ctx.drawImage(treesLayer(size,big),0,0);
   structures.forEach(s=>{ctx.fillStyle=s.type==='fire'?'#ff7a1a':s.type==='hut'?'#7a4a22':'#e8c040';const q=big?9:5;ctx.fillRect(tx(s.x)-q/2,tz(s.z)-q/2,q,q);if(big){ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.strokeRect(tx(s.x)-q/2,tz(s.z)-q/2,q,q);}});
   animals.forEach(a=>{if(a.dead)return;ctx.fillStyle=a.S.pred?'#ff2d20':(a.key==='elephant'?'#b8b8c4':'#ffd166');const q=big?5:3;ctx.beginPath();ctx.arc(tx(a.x),tz(a.z),q,0,7);ctx.fill();});
   const rr=big?10:5.5;
@@ -1327,8 +1388,8 @@ function drawMapTo(ctx,size,big){
 }
 const mini=$('mini'),mx=mini.getContext('2d'),bigCv=$('bigCv'),bgx=bigCv.getContext('2d');
 let miniT=0;
-function drawMini(dt){miniT-=dt;if(miniT>0)return;miniT=.25;drawMapTo(mx,128,false);}
-$('mini').onclick=()=>{if(!G.running||G.over)return;G.paused=true;drawMapTo(bgx,640,true);
+function drawMini(dt){miniT-=dt;if(miniT>0)return;miniT=.4;drawMapTo(mx,128,false);}
+$('mini').onclick=()=>{if(!G.running||G.over)return;G.paused=true;treeLayer[640]=null;drawMapTo(bgx,640,true);
   $('legend').innerHTML=humans.filter(h=>h.active).map(h=>'<span><i style="background:'+hexc(h.col)+'"></i>'+h.name+(h===P?' (تو)':'')+'</span>').join('')+'<span><i style="background:#ff2d20"></i>شیر</span><span><i style="background:#ffd166"></i>حیوان</span><span><i style="background:#ff7a1a;border-radius:2px"></i>آتش</span><span><i style="background:#7a4a22;border-radius:2px"></i>کلبه</span><span><i style="background:#e8c040;border-radius:2px"></i>مزرعه</span>';
   show('bigmap');};
 $('mapClose').onclick=()=>{G.paused=false;show(null);};
@@ -1523,7 +1584,7 @@ function startGame(snap,online){
   if(online)netPrepareWorld();else netLeave();
   if(snap){try{loadSnapshot(snap);}catch(e){console.error(e);}}
   cf.x=P.x;cf.z=P.z;cf.y=hgt(P.x,P.z);G.yaw=0;
-  curSeason=-1;scDirty=true;poolsDirty();G.running=true;$('hud').classList.add('on');show(null);applySettings();
+  curSeason=-1;scDirty=true;poolsDirty();G.running=true;$('hud').classList.add('on');document.body.classList.add('playing');show(null);applySettings();
   toast(snap?'ادامه‌ی بازی':'سال ۰ — روز اول. اول شاخه و سنگ‌ریزه جمع کن تا تبر و کلنگ بسازی.');
 }
 
@@ -1670,10 +1731,10 @@ function update(dt){
 function updateCamera(dt){
   if(!G.running){G.yaw+=dt*.07;cf.x=lerp(cf.x,SPAWN.x,.05);cf.z=lerp(cf.z,SPAWN.z,.05);cf.y=hgt(cf.x,cf.z);}
   else{
-    if(G.smart&&P.moving&&!G.paused){const ty=Math.atan2(-P.dx,-P.dz);G.yaw+=angDiff(G.yaw,ty)*Math.min(1,dt*1.6);}
+    if(!SET.freeRot)G.yaw+=angDiff(G.yaw,0)*Math.min(1,dt*4);if(G.smart&&P.moving&&!G.paused){const ty=Math.atan2(-P.dx,-P.dz);G.yaw+=angDiff(G.yaw,ty)*Math.min(1,dt*1.6);}
     const k=Math.min(1,dt*9);cf.x+=(P.x-cf.x)*k;cf.z+=(P.z-cf.z)*k;cf.y+=(hgt(P.x,P.z)-cf.y)*k;
   }
-  const tp2=G.running?SET.camPitch*Math.PI/180:.62,td=G.running?G.zoomT:48;G.pitch+=(tp2-G.pitch)*Math.min(1,dt*3);G.dist+=(td-G.dist)*Math.min(1,dt*4);
+  const tp2=G.running?SET.camPitch*Math.PI/180:.62,td=(G.running?G.zoomT:48)*camZf;G.pitch+=(tp2-G.pitch)*Math.min(1,dt*3);G.dist+=(td-G.dist)*Math.min(1,dt*4);
   const cp=Math.cos(G.pitch),sp=Math.sin(G.pitch);
   camera.position.set(cf.x+Math.sin(G.yaw)*cp*G.dist,cf.y+sp*G.dist+1.5,cf.z+Math.cos(G.yaw)*cp*G.dist);
   camera.lookAt(cf.x,cf.y+1,cf.z);camera.updateMatrixWorld();
@@ -1722,7 +1783,7 @@ function loop(now){
   updateParticles(rdt,dayF);updateLabels();
   refreshPools();refreshScatter();
   if(G.running){drawMini(rdt);hudT-=rdt;if(hudT<=0){hudT=.15;updateHud();}if(!G.paused&&!G.over)autoPerf(rdt);}
-  renderer.shadowMap.needsUpdate=(frame%2===0);
+  renderer.shadowMap.needsUpdate=(frame%3===0);
   renderer.render(scene,camera);
 }
 $('setBack2').onclick=$('setBack').onclick;$('craftClose2').onclick=$('craftClose').onclick;$('onBack2').onclick=$('onBack').onclick;
@@ -1735,6 +1796,7 @@ $('setBack2').onclick=$('setBack').onclick;$('craftClose2').onclick=$('craftClos
     ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
   });
 })();
+['visibilitychange','pagehide'].forEach(ev=>addEventListener(ev,()=>{if((ev==='pagehide'||document.hidden)&&G.running&&!G.over&&!net.on){try{Store.save(snapshot());}catch(e){}}}));
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 applySettings();
 showTap();

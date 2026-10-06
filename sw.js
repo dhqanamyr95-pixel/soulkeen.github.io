@@ -1,15 +1,40 @@
-const C='soulkeen-v1';
-self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./manifest.json','./icon-192.png'])).catch(()=>{}));self.skipWaiting();});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim();});
-self.addEventListener('fetch',e=>{
-  const r=e.request,u=new URL(r.url);
-  if(r.method!=='GET'||u.hostname.indexOf('peerjs.com')>=0)return;
-  if(r.mode==='navigate'){
-    e.respondWith(fetch(r).then(res=>{const cp=res.clone();caches.open(C).then(c=>c.put(r,cp));return res;}).catch(()=>caches.match('./index.html')));
-    return;
+const CACHE = 'soulkeen-v2';
+const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  const sameOrigin = url.origin === location.origin;
+  if (sameOrigin) {
+    // فایل‌های خود بازی: اول شبکه (آپدیت زود برسد)، اگر نبود از حافظه
+    e.respondWith(
+      fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy));
+        return res;
+      }).catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
+    );
+  } else if (/three\.min\.js|peerjs/.test(url.pathname)) {
+    // کتابخانه‌های CDN: اول حافظه، تا بعد از اولین بار آفلاین هم اجرا شود
+    e.respondWith(
+      caches.match(req).then(r => r || fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy));
+        return res;
+      }))
+    );
   }
-  e.respondWith(caches.match(r).then(hit=>hit||fetch(r).then(res=>{
-    if(res&&res.status===200&&(u.origin===location.origin||u.hostname.indexOf('cdnjs')>=0||u.hostname.indexOf('unpkg')>=0)){const cp=res.clone();caches.open(C).then(c=>c.put(r,cp));}
-    return res;
-  })));
 });
